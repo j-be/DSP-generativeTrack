@@ -2,7 +2,7 @@ import datetime
 
 
 MAX_TIME = 2016000000
-TRACK_DURATION = 210
+TRACK_DURATION = 10
 
 def parse_date(date_str):
     return datetime.datetime.strptime(date_str.strip(), "%Y  %b  %d")
@@ -140,6 +140,9 @@ with open('list-others.txt') as atomic_list:
                 parsed_list.append([date, party, explosion_yield, lat, lon])
         except Exception:
             pass
+
+# Sort the list by timestamp
+parsed_list = sorted(parsed_list, key=lambda atomic_test: atomic_test[0])
 
 with open('list-full.csv', 'w') as full_list:
     for line in parsed_list:
