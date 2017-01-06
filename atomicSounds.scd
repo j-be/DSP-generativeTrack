@@ -1,4 +1,7 @@
 (
+~minNote = 40;
+~maxNote = 120;
+
 // Maximum explosion yield (Tsar Bomba)
 ~max_yield = 58000;
 
@@ -1656,24 +1659,28 @@
 	~parseData.(9.996428571428572, \OTHERS, 4, 41.306, 129.029),
 ];
 
-(
-SynthDef(\synthStereo,{
-	arg freq = 440, vol = 1;
+SynthDef(\atomicSynth,{
+	| explosion_yield lat lon |
 
-	Out.ar(0,
-		SinOsc.ar(freq: [freq, freq], mul: vol)
-	)
-}
-).store
-);
+	// Calculate the note from the explosion place's latitude
+	var note = ((~minNote + ~maxNote) / 2) + (~maxNote - ~minNote) * lat / 90;
+	// Calculate the volume as logarithmic yield and normalize it to the maximum yield
+	var vol = explosion_yield.log10 / ~max_yield.log10;
+	// Calculate the panning from the explosion place's longitude
+	var pos = lon / 180;
+
+	Out.ar(0,Pan2.ar(SinOsc.ar(freq: note.midicps), pos, vol));
+}).store;
 
 ~atomicTest = {
 	| atomic_test_data |
 
-	// Calculate the volume as logarithmic yield and normalize it to the maximum yield
-	var vol = atomic_test_data[\explosion_yield].log10 / ~max_yield.log10;
 	// TODO: Use synth for party
-	var synth = Synth(\synthStereo, [\freq, 440, \vol, vol]);
+	var synth = Synth(\atomicSynth, [
+		\explosion_yield, atomic_test_data[\explosion_yield],
+		\lat, atomic_test_data[\lat],
+		\lon, atomic_test_data[\lon]
+	]);
 
 	// Debug output
 	atomic_test_data[\time].post;" ".post;atomic_test_data[\party].postln;
