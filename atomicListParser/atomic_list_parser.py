@@ -2,7 +2,7 @@ import datetime
 
 
 MAX_TIME = 2016000000
-TRACK_DURATION = 10
+TRACK_DURATION = 120
 
 def parse_date(date_str):
     return datetime.datetime.strptime(date_str.strip(), "%Y  %b  %d")
