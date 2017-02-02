@@ -1,6 +1,6 @@
 (
-~minNote = 40;
-~maxNote = 120;
+~minNote = 38;
+~maxNote = 100;
 
 // Maximum explosion yield (Tsar Bomba)
 ~max_yield = 58000;
@@ -1659,11 +1659,16 @@
 	~parseData.(119.957142857, \OTHERS, 4, 41.306, 129.029),
 ];
 
+~getFreqFromLat = {
+	| lat |
+	(~minNote + ((~maxNote - ~minNote) * (lat + 90) / 180)).midicps;
+};
+
 SynthDef(\atomicSynth,{
 	| explosion_yield lat lon |
 
 	// Calculate the note from the explosion place's latitude
-	var freq = (((~minNote + ~maxNote) / 2) + (~maxNote - ~minNote) * lat / 90).midicps;
+	var freq = ~getFreqFromLat.(lat);
 	// Calculate the volume as logarithmic yield and normalize it to the maximum yield
 	var vol = explosion_yield.log10 / ~max_yield.log10;
 	// Calculate the panning from the explosion place's longitude
