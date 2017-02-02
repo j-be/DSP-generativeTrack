@@ -142,7 +142,7 @@ with open('list-others.txt') as atomic_list:
             pass
 
 # Sort the list by timestamp
-parsed_list = sorted(parsed_list, key=lambda atomic_test: atomic_test[0])
+parsed_list = sorted(parsed_list, key=lambda atomic_test: float(atomic_test[0]))
 
 with open('list-full.csv', 'w') as full_list:
     for line in parsed_list:
