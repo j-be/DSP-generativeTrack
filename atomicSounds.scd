@@ -1664,7 +1664,7 @@
 	(~minNote + ((~maxNote - ~minNote) * (lat + 90) / 180)).midicps;
 };
 
-SynthDef(\atomicSynth,{
+SynthDef(\bellSynth, {
 	| explosion_yield lat lon |
 
 	// Calculate the note from the explosion place's latitude
@@ -1680,7 +1680,6 @@ SynthDef(\atomicSynth,{
 	 */
 	var son, hum;
 
-	/* Source: https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd */
 	// Stretched harmonic series
 	son = SinOsc.ar(#[2, 3, 4.1, 5.43, 6.8, 8.21] * freq, 0,
 		#[1, 0.9, 0.8, 0.7, 0.6, 0.5] * 0.1);
@@ -1697,13 +1696,13 @@ SynthDef(\atomicSynth,{
 	/* End copied part */
 
 	Out.ar(0,Pan2.ar(son + hum), pos, vol);
-}).store;
+}).add;
 
 ~atomicTest = {
 	| atomic_test_data |
 
 	// TODO: Use synth for party
-	var synth = Synth(\atomicSynth, [
+	var synth = Synth(\bellSynth, [
 		\explosion_yield, atomic_test_data[\explosion_yield],
 		\lat, atomic_test_data[\lat],
 		\lon, atomic_test_data[\lon]
@@ -1742,7 +1741,6 @@ SynthDef(\atomicSynth,{
 
 	~spawner.free;
 });
-
 
 ~spawner.play
 )
