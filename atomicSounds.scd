@@ -1663,13 +1663,35 @@ SynthDef(\atomicSynth,{
 	| explosion_yield lat lon |
 
 	// Calculate the note from the explosion place's latitude
-	var note = ((~minNote + ~maxNote) / 2) + (~maxNote - ~minNote) * lat / 90;
+	var freq = (((~minNote + ~maxNote) / 2) + (~maxNote - ~minNote) * lat / 90).midicps;
 	// Calculate the volume as logarithmic yield and normalize it to the maximum yield
 	var vol = explosion_yield.log10 / ~max_yield.log10;
 	// Calculate the panning from the explosion place's longitude
 	var pos = lon / 180;
 
-	Out.ar(0,Pan2.ar(SinOsc.ar(freq: note.midicps), pos, vol));
+	/* Start copied part.
+	 *
+	 * Adapted from: https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd
+	 */
+	var son, hum;
+
+	/* Source: https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd */
+	// Stretched harmonic series
+	son = SinOsc.ar(#[2, 3, 4.1, 5.43, 6.8, 8.21] * freq, 0,
+		#[1, 0.9, 0.8, 0.7, 0.6, 0.5] * 0.1);
+
+	son = son * EnvGen.ar(Env.new([0,1,0.3, 0.2, 0], [0, 0.3, 0.3, 0.3]));
+
+	// A bit of FM adds 'warble'
+	son = son * LFTri.ar({Rand(1.0, 1.8)}.dup(6), 1, 0.3, 0.7);
+
+	// Mix down the partials in the main sound
+	son = son.mean;
+
+	hum = SinOsc.ar([freq*1.01, freq*0.47], 0, EnvGen.ar(Env.new([0,0.05,0.05,0], [0.2,0.8,0.2]), doneAction:1.5)).mean;
+	/* End copied part */
+
+	Out.ar(0,Pan2.ar(son + hum), pos, vol);
 }).store;
 
 ~atomicTest = {
@@ -1685,8 +1707,8 @@ SynthDef(\atomicSynth,{
 	// Debug output
 	atomic_test_data[\time].post;" ".post;atomic_test_data[\party].postln;
 
-	// TODO: Use something like a ADSR
-	0.5.wait;
+	// Cleanup
+	1.5.wait;
 	synth.free;
 };
 
