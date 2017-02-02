@@ -1721,6 +1721,9 @@ SynthDef(\atomicSynth,{
 ~spawner = Task({
 	var previous_time = 0;
 
+	// Wait for SynthDef is sent to server
+	s.sync;
+
 	/* Main event loop */
 	~data.size.do({
 		arg i;
