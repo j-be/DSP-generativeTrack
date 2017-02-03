@@ -22,11 +22,11 @@ In addition it gives me the opportunity for (what I think is) a quite cool name.
  Parameter mapping
 ===================
 The sound of the bell is parameterized in 3 dimensions:
-  1. the yield gets mapped on the volume using a logarithmic scale. The reason for the logarithmic scale arises from the
-     fact, that the most powerful nuclear eplosion, the "Tsar Bomba" detonated by the USSR on October 30, 1961 (by the
-     way the most powerful explosion ever created by mankind from what we know) had an equivalent of 58 megatons (!!!)
-     of TNT, while most others were quite a bit smaller. On a linear scale this would mean, that very little explosions
-     would even be audible.
+  1. the explosion's yield (i.e. the energy output) gets mapped on the volume using a logarithmic scale. The reason for
+     the logarithmic scale arises from the fact, that the most powerful nuclear eplosion, the "Tsar Bomba" detonated by
+     the USSR on October 30, 1961 (by the way the most powerful explosion ever created by mankind from what we know)
+     had an equivalent of 58 megatons (!!!) of TNT, while most others were quite a bit smaller. On a linear scale this
+     would mean, that very little explosions would even be audible.
   2. the latitude is mapped on the pitch, giving an analogy from north/south, being top/bottom on a map to high/low on
      from a pitch point of view.
   3. the longitude is mapped to the pan parameter giving an analogy from west/east, being left/right on a map to
@@ -47,8 +47,8 @@ the very end of the script which allows to stop playback. It is commented out, s
 
  Sources
 =========
-I took the data from from http://www.johnstonsarchive.net/nuclear/tests/index.html and filtered, restructured and sorted
-and restructured using a small Python2 script (see atomicListParser/atomic_list_parser.py).
+I took the data from http://www.johnstonsarchive.net/nuclear/tests/index.html and filtered, restructured and sorted it
+using a small Python2 script (see atomicListParser/atomic_list_parser.py).
 
 The skeleton for the bell synthesizer is derived from
 https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd
@@ -1792,8 +1792,6 @@ SynthDef(\bellSynth, {
 
 Parameters:
   atomic_test_data: (Dictionary as returned by ~parseData) the nuclear test data
-Returns:
-  nothing
 */
 ~atomicTest = {
 	| atomic_test_data |
@@ -1815,7 +1813,7 @@ Returns:
 
 /* Main event spawner.
 
-This is wrapped in a task so it can be aborted and for s.sync() to work.
+This is wrapped in a task so it can be aborted and for s.sync to work.
 */
 ~spawner = Task({
 	var previous_time = 0;
