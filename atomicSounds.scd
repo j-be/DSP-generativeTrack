@@ -1785,7 +1785,7 @@ SynthDef(\bellSynth, {
 	hum = SinOsc.ar([freq*1.01, freq*0.47], 0, EnvGen.ar(Env.new([0,0.05,0.05,0], [0.2,0.8,0.2]), doneAction:1.5)).mean;
 	/* End copied part */
 
-	Out.ar(0,Pan2.ar(son + hum), pos, vol);
+	Out.ar(0,Pan2.ar((son + hum), pos, vol));
 }).add;
 
 /* Helper function for one atomic test.
