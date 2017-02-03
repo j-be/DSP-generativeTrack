@@ -1,12 +1,84 @@
+/*
+   "Hells Bells"
+  ###############
+
+A generative track based on nuclear explosions by Juri Berlanda for " DSP-Processing & Generative Music", WS 2016.
+
+This code is under MIT License and available at https://github.com/j-be/DSP-generativeTrack
+
+ Idea:
+=======
+The idea behind this is to give an impression on how much efforts were put into nuclear testing. The track boils down
+roughly 70 years of nuclear testing to 2 minutes. Not all nuclear explosions were taken into account. Since some tests
+were to small and some nuclear devices did not explode on the test range, only the explosions which effectively
+delivered an equivalent of 1 kiloton of TNT or more were taken into account. But don't worry, there are still plenty.
+
+ Sound generation
+==================
+For each explosion you will hear a bell: A SynthDef creates a rudimentary bell synthesizer. The reason why I chose the
+bell is the analogy to an explosion: quick attack and no way to play a permanent sound (at least on a real-life bell).
+In addition it gives me the opportunity for (what I think is) a quite cool name.
+
+ Parameter mapping
+===================
+The sound of the bell is parameterized in 3 dimensions:
+  1. the yield gets mapped on the volume using a logarithmic scale. The reason for the logarithmic scale arises from the
+     fact, that the most powerful nuclear eplosion, the "Tsar Bomba" detonated by the USSR on October 30, 1961 (by the
+     way the most powerful explosion ever created by mankind from what we know) had an equivalent of 58 megatons (!!!)
+     of TNT, while most others were quite a bit smaller. On a linear scale this would mean, that very little explosions
+     would even be audible.
+  2. the latitude is mapped on the pitch, giving an analogy from north/south, being top/bottom on a map to high/low on
+     from a pitch point of view.
+  3. the longitude is mapped to the pan parameter giving an analogy from west/east, being left/right on a map to
+     left/right on the stereo effect.
+Last, but not least the time is mapped to itself, meaning that the first relevant explosion ("Trinity" by the US on July
+16, 1945) is at the beginning of the track while the last one is from North Korea on May 25, 2009.
+
+ Server settings
+=================
+The server was run in default mode on my notbook, which means it had a memory size of 2 gigabyte (which seems to be
+close to the very minimum for this script).
+
+ Execution
+===========
+The logic is wrapped in brackets, starting right after this comment block. There is only one call outside the block at
+the very end of the script which allows to stop playback. It is commented out, so a <Ctrl>+<A> followed by a
+<Ctrl>+<Return> plays the track.
+
+ Sources
+=========
+I took the data from from http://www.johnstonsarchive.net/nuclear/tests/index.html and filtered, restructured and sorted
+and restructured using a small Python2 script (see atomicListParser/atomic_list_parser.py).
+
+The skeleton for the bell synthesizer is derived from
+https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd
+
+All relevant parts referring to these sources are again marked in the code as such.
+*/
+
 (
+// The lowest note as MIDI code, representing the south pole
 ~minNote = 38;
+// The highest note as MIDI code, representing the north pole
 ~maxNote = 100;
 
-// Maximum explosion yield (Tsar Bomba)
+// Maximum explosion yield (Tsar Bomba). Hardcoded here for convenience
 ~max_yield = 58000;
 
 /* Generates a Dictionary for the given raw data.
- * TODO: Document interface and return value
+
+This is just a convenience wrapper for the data, since it allows me to efficiently pass the data to functions. It also
+allows me to initialize the list here in SuperCollider by generating calls to this function in atomic_list_parser.py.
+
+Parameters:
+  time: (float) the time in seconds
+  party: (Symbol) who is responsible for the explosion (US, USSR, GB, FR, OTHERS)
+  explision_yield: (float) the effective yield of the explosion in kilotons
+  lat: (float) latitude of the explsion site
+  lon: (float) the longitude of the explosion site
+
+Returns:
+  (Dictionary) containing the given values as \time, \party, \explision_yield, \lat and \lon
  */
 ~parseData = {
 	| time party explosion_yield lat lon |
@@ -23,10 +95,12 @@
 };
 
 /* Create the list of all explosions. The calls to ~parseData are generated using atomic_list_parser.py.
- *
- * The data is taken from http://www.johnstonsarchive.net/nuclear/tests/index.html and filtered with the following rules:
- *   - only explosions with a number as yield are used (e.g. no empty yields)
- *   - only explosions with a yield > 1 kiloton are used
+
+This is a kind of dirty workaround, as I have not found any way to read from a file using SuperCollider.
+
+The data is taken from http://www.johnstonsarchive.net/nuclear/tests/index.html and filtered with the following rules:
+   - only explosions with a number as yield are used (e.g. no empty yields)
+   - only explosions with a yield > 1 kiloton are used
  */
 ~data = List [
 	~parseData.(0.00514285714286, \US, 21, 33.67530, -106.47470),
@@ -1659,11 +1733,28 @@
 	~parseData.(119.957142857, \OTHERS, 4, 41.306, 129.029),
 ];
 
+/* Helper function to map the latitude to the note.
+
+Parameters:
+  lat: (float) the latitude to be mapped
+
+Returns:
+  (float) linear interpolation between ~minNote and ~maxNote (lat=-90 returns ~minNote, lat=90 returns ~maxNote)
+*/
 ~getFreqFromLat = {
 	| lat |
 	(~minNote + ((~maxNote - ~minNote) * (lat + 90) / 180)).midicps;
 };
 
+/* Define a bell synth and add it to current runtime.
+
+See function body for copied code.
+
+Parameters:
+  explosion_yield: (float) the explosion yield in kilotons
+  lat: (float) the latitude of the explosion site
+  lon: (float) the longitude of the explosion site
+*/
 SynthDef(\bellSynth, {
 	| explosion_yield lat lon |
 
@@ -1674,9 +1765,8 @@ SynthDef(\bellSynth, {
 	// Calculate the panning from the explosion place's longitude
 	var pos = lon / 180;
 
-	/* Start copied part.
-	 *
-	 * Adapted from: https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd
+	/* Start copied and adapted from
+	   https://github.com/everythingwillbetakenaway/Synthdefs/blob/master/sos_bell.scd
 	 */
 	var son, hum;
 
@@ -1698,10 +1788,17 @@ SynthDef(\bellSynth, {
 	Out.ar(0,Pan2.ar(son + hum), pos, vol);
 }).add;
 
+/* Helper function for one atomic test.
+
+Parameters:
+  atomic_test_data: (Dictionary as returned by ~parseData) the nuclear test data
+Returns:
+  nothing
+*/
 ~atomicTest = {
 	| atomic_test_data |
 
-	// TODO: Use synth for party
+	// Ring the bell
 	var synth = Synth(\bellSynth, [
 		\explosion_yield, atomic_test_data[\explosion_yield],
 		\lat, atomic_test_data[\lat],
@@ -1716,32 +1813,41 @@ SynthDef(\bellSynth, {
 	synth.free;
 };
 
-/* Main event spawner. This is wrapped in a task so it can be aborted. */
+/* Main event spawner.
+
+This is wrapped in a task so it can be aborted and for s.sync() to work.
+*/
 ~spawner = Task({
 	var previous_time = 0;
 
-	// Wait for SynthDef is sent to server
+	// Wait until SynthDef is sent to server
 	s.sync;
 
-	/* Main event loop */
+	// Main event loop
 	~data.size.do({
 		arg i;
 		var player;
+		// Calculate incremental delay from previous timestamp
 		var delay = ~data[i][\time] - previous_time;
 
 		delay.wait;
+		// Start a helper task
 		player = Task({
 			~atomicTest.(~data[i]);
 			player.free;
 		});
 		player.play;
 
+		// Store timestamp for incremental delay calculation
 		previous_time = ~data[i][\time];
 	});
-
+	// Cleanup
 	~spawner.free;
 });
 
+// Start main spawner task
 ~spawner.play
 )
-~spawner.stop
+
+// You may use the following to abort playback
+//~spawner.stop
